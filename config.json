@@ -1,0 +1,5 @@
+{
+    "exchanges": ["ascendex","binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"],
+    "min24hvolume": 500000
+}
+

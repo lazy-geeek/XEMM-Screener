@@ -1,7 +1,10 @@
 import ccxt
-from pprint import pprint
 import json
+import pandas as pd
+import time
+
 from functions import *
+from pprint import pprint
 
 def run():
 
@@ -10,18 +13,16 @@ def run():
     with open('config.json', 'r') as f:
         config = json.load(f)
         
-    min24hvolume = 0    
+    df = pd.DataFrame()
+    rows = []
+    min24hvolume = 0        
         
     exchanges = config['exchanges']
     min24hvolume = config['min24hvolume']
-        
+    
     #exchanges =  ["ascendex","binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
     
-    exchanges =  ["huobi"]
-    
-    for exchangeName in exchanges:
-                
-        rows = []        
+    for exchangeName in exchanges:                
 
         exchange_class = getattr(ccxt, exchangeName)
 
@@ -42,16 +43,23 @@ def run():
             quote = value['quote']
             base = value['base']
             
+            ######### TODO: Skip Base USD pairs
+            
+            ######### TODO: Skip Base pairs which are only traded on 1 exchange
+            
             if not (isActiveMarket(value) and isSpotPair(value) and isUSDpair(quote)):
                 continue
             
             if not tickerHasPrice(tickers[pair]):
                 continue    
             
-            ######### TODO: Convert to USD
+            ######### TODO: Convert nonUSD pairs to USD
             
             ticker = tickers[pair]
-            quoteVolume = ticker['quoteVolume']           
+            quoteVolume = ticker['quoteVolume']    
+            
+            if quoteVolume is None:
+                continue       
             
             if quoteVolume < min24hvolume:
                 continue                    
@@ -71,9 +79,23 @@ def run():
             row['Base'] = base
             row['Quote'] = quote
             
-            ######### TODO: Create pandas dataframe
+            rows.append(row)
             
-            
+    df = pd.DataFrame.from_records(rows)
+    
+    df.sort_values(['Ticker'], inplace=True, ascending=True)
+        
+    fileName = time.strftime("%Y%m%d-%H%M%S") + ".xlsx"
+    
+    ######### TODO: Format Price Decimals
+    
+    ######### TODO: Format Volume to million
+    
+    ######### TODO: Excel is filterable
+    
+    ######### TODO: Autoformat Excel
+    
+    df.to_excel(fileName, index=False)
                 
 if __name__ == "__main__":
     run()

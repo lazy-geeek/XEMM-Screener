@@ -10,14 +10,18 @@ def run():
     with open('config.json', 'r') as f:
         config = json.load(f)
         
+    min24hvolume = 0    
+        
     exchanges = config['exchanges']
     min24hvolume = config['min24hvolume']
         
-    pprint(exchanges)
+    #exchanges =  ["ascendex","binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
     
-    for exchangeName in exchanges:   
-        
-        allPairs = []  
+    exchanges =  ["huobi"]
+    
+    for exchangeName in exchanges:
+                
+        rows = []        
 
         exchange_class = getattr(ccxt, exchangeName)
 
@@ -29,23 +33,47 @@ def run():
         print("Exchange:", exchange)
 
         markets = exchange.load_markets(True)
+        tickers = exchange.fetch_tickers()
         
         for pair, value in markets.items():
-            if isActiveMarket(value) and isSpotPair(value):
-                allPairs.append(pair)
-
-        tickers = exchange.fetch_tickers()
-
-        """
-        for pair in allPairs:
-            if not tickerHasPrice(tickers[pair]):
-                allPairs.remove(pair)
-        """
+            quoteVolume = 0
+            row = {}
             
-        # ######### TODO: Check market volume        
+            quote = value['quote']
+            base = value['base']
+            
+            if not (isActiveMarket(value) and isSpotPair(value) and isUSDpair(quote)):
+                continue
+            
+            if not tickerHasPrice(tickers[pair]):
+                continue    
+            
+            ######### TODO: Convert to USD
+            
+            ticker = tickers[pair]
+            quoteVolume = ticker['quoteVolume']           
+            
+            if quoteVolume < min24hvolume:
+                continue                    
 
-        print(tickers[allPairs[0]]['symbol'])
-
+            #print(tickers[allPairs[0]]['symbol'])
+            
+            ######### TODO: Calculate Spread
+            
+            ######### TODO: Calculate Orderbook Volume
+            
+            # Create row
+        
+            row['Exchange'] = exchangeName
+            row['Ticker'] = ticker['symbol']
+            row['Price'] = ticker['last']
+            row['24h'] = quoteVolume
+            row['Base'] = base
+            row['Quote'] = quote
+            
+            ######### TODO: Create pandas dataframe
+            
+            
                 
 if __name__ == "__main__":
     run()

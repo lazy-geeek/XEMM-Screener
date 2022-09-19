@@ -16,3 +16,6 @@ def tickerHasPrice(ticker):
 
 def isUSDpair(quote):
     return 'USD' in quote
+
+def isUSDBasePair(base):
+    return 'USD' in base

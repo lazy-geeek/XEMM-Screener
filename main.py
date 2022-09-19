@@ -42,48 +42,64 @@ def run():
             
             quote = value['quote']
             base = value['base']
-            
-            ######### TODO: Skip Base USD pairs
-            
-            ######### TODO: Skip Base pairs which are only traded on 1 exchange
-            
+                        
             if not (isActiveMarket(value) and isSpotPair(value) and isUSDpair(quote)):
                 continue
             
-            if not tickerHasPrice(tickers[pair]):
+            if isUSDBasePair(base):
+                continue
+            
+            ticker = tickers[pair]
+                        
+            if not tickerHasPrice(ticker):
                 continue    
             
             ######### TODO: Convert nonUSD pairs to USD
             
-            ticker = tickers[pair]
+            ask = ticker['ask']
+            bid = ticker['bid']            
             quoteVolume = ticker['quoteVolume']    
             
             if quoteVolume is None:
                 continue       
             
             if quoteVolume < min24hvolume:
-                continue                    
-
-            #print(tickers[allPairs[0]]['symbol'])
+                continue            
             
-            ######### TODO: Calculate Spread
+            spread = (ask / bid - 1) * 100
             
             ######### TODO: Calculate Orderbook Volume
             
             # Create row
         
-            row['Exchange'] = exchangeName
-            row['Ticker'] = ticker['symbol']
-            row['Price'] = ticker['last']
-            row['24h'] = quoteVolume
-            row['Base'] = base
-            row['Quote'] = quote
+            row['exchange'] = exchangeName
+            row['ticker'] = ticker['symbol']
+            row['price'] = ticker['last']
+            row['volume'] = quoteVolume
+            row['base'] = base
+            row['quote'] = quote
+            row['spread'] = spread
             
             rows.append(row)
             
     df = pd.DataFrame.from_records(rows)
     
-    df.sort_values(['Ticker'], inplace=True, ascending=True)
+    ######### TODO: Remove Base pairs which are only traded on 1 exchange
+    
+    ######### TODO: Keep only exchanges with highest and lowest spread
+    
+    ######### TODO: Spread Factor between highest and lowest spread
+    
+    df.sort_values(['ticker'], inplace=True, ascending=True)
+    
+    df.rename(columns={ 'exchange': 'Exchange',
+                        'ticker': 'Ticker',
+                        'price': 'Price',
+                        'volume': '24h',
+                        'base': 'Base',
+                        'quote': 'Quote',
+                        'spread': 'Spread %'
+                            }, inplace=True)
         
     fileName = time.strftime("%Y%m%d-%H%M%S") + ".xlsx"
     

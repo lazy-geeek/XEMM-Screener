@@ -1,5 +1,5 @@
 {
     "exchanges": ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"],
-    "min24hvolume": 500000
+    "min24hvolume": 1000000
 }
 

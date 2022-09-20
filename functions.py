@@ -1,5 +1,5 @@
 def isSpotPair(value):
-    if value['type'] == 'spot':
+    if value['spot'] == True and value['margin'] == False:
         return True
     
     if ':' not in value['symbol']:
@@ -19,3 +19,23 @@ def isUSDpair(quote):
 
 def isUSDBasePair(base):
     return 'USD' in base
+
+def orderBookVolume(side, orderBook):
+    
+    price = 0
+    totalVolume = 0
+    orderBookLevel = 0
+    
+    # Calculate volume border price
+    borderPrice = orderBook[side][0][0] * (1 + (2 / 100))
+    
+    while price < borderPrice and orderBookLevel < len(orderBook[side]) - 1:
+        
+        price = orderBook[side][orderBookLevel][0]  # Pair base coin
+        quantity = orderBook[side][orderBookLevel][1]  # Pair quote coin
+        volume = price * quantity
+        totalVolume += volume
+                    
+        orderBookLevel += 1
+        
+    return totalVolume

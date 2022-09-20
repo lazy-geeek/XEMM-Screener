@@ -20,7 +20,7 @@ def run():
     exchanges = config['exchanges']
     min24hvolume = config['min24hvolume']
     
-    #exchanges =  ["ascendex","binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
+    exchanges =  ["bybit"]
     
     for exchangeName in exchanges:                
 
@@ -35,6 +35,10 @@ def run():
 
         markets = exchange.load_markets(True)
         tickers = exchange.fetch_tickers()
+        
+        pprint(markets['BTC/USDT'])
+        
+        """
         
         for pair, value in markets.items():
             quoteVolume = 0
@@ -68,16 +72,7 @@ def run():
             
             spread = (ask / bid - 1) * 100
             
-            # Calculate Orderbook Volume            
-            
-            orderbook = exchange.fetch_order_book(pair)
-            
-            if not (orderbook['asks'] or orderbook['bids']):
-                askVolume = 0
-                bidVolume = 0                
-            else:
-                askVolume = orderBookVolume('asks',orderbook)
-                bidVolume = orderBookVolume('bids',orderbook)
+            ######### TODO: Calculate Orderbook Volume
             
             # Create row
         
@@ -88,8 +83,6 @@ def run():
             row['base'] = base
             row['quote'] = quote
             row['spread'] = spread
-            row['askVolume'] = askVolume
-            row['bidVolume'] = bidVolume
             
             rows.append(row)
             
@@ -109,9 +102,7 @@ def run():
                         'volume': '24h',
                         'base': 'Base',
                         'quote': 'Quote',
-                        'spread': 'Spread %',
-                        'askVolume': '+2%',
-                        'bidVolume': '-2%'
+                        'spread': 'Spread %'
                             }, inplace=True)
         
     fileName = time.strftime("%Y%m%d-%H%M%S") + ".xlsx"
@@ -125,6 +116,8 @@ def run():
     ######### TODO: Autoformat Excel
     
     df.to_excel(fileName, index=False)
+    
+    """
                 
 if __name__ == "__main__":
     run()

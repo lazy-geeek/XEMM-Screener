@@ -22,7 +22,7 @@ def run():
     min24hvolume = config['min24hvolume']
     
     #exchanges =  ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
-    exchanges =  ["gate","kucoin"]
+    #exchanges =  ["gate","kucoin"]
     
     for exchangeName in exchanges:  
         
@@ -98,9 +98,7 @@ def run():
                 row['askVolume'] = askVolume
                 row['bidVolume'] = bidVolume
                 
-                rows.append(row)
-                
-                
+                rows.append(row)                
                 
         except ccxt.ExchangeError as e:
             pprint(str(e))
@@ -118,16 +116,6 @@ def run():
     
     ######### TODO: Spread Factor between highest and lowest spread
     
-    # Format Numbers
-
-    """
-    df['price'] = df['price'].map('{:,.0f}'.format)
-    df['volume'] = df['volume'].map('{:,.0f}'.format)
-    df['spread'] = df['spread'].map('{:,.0f}'.format)
-    df['askVolume'] = df['askVolume'].map('{:,.0f}'.format)
-    df['bidVolume'] = df['bidVolume'].map('{:,.0f}'.format)
-    """
-        
     df.sort_values(['ticker'], inplace=True, ascending=True)
     
     df.rename(columns={ 'exchange': 'Exchange',
@@ -141,17 +129,33 @@ def run():
                         'bidVolume': '-2%'
                             }, inplace=True)
         
+    sheetName = 'Order Books'
     fileName = time.strftime("%Y%m%d-%H%M%S") + ".xlsx"
+        
+    writer = pd.ExcelWriter(fileName,engine='xlsxwriter') # type: ignore
+    df.to_excel(writer, sheet_name=sheetName, index=False)
     
+    workbook  = writer.book
+    worksheet = writer.sheets[sheetName]
+
+    # Add cell formats.
+    priceFormat = workbook.add_format({'num_format': '#,##0.00'}) # type: ignore
+    volumeFormat = workbook.add_format({'num_format': '#,##0'}) # type: ignore
+    percentFormat = workbook.add_format({'num_format': '0.0000'}) # type: ignore
+
+    # Set the column width and format.
+    worksheet.set_column('A:A', 13)                         # Exchange
+    worksheet.set_column('B:B', 14)                         # Ticker
+    worksheet.set_column('C:C', 9, priceFormat)             # Price
+    worksheet.set_column('D:D', 9, volumeFormat)            # 24h Volume
+    worksheet.set_column('E:F', 10, volumeFormat)           # Base / Quote
+    worksheet.set_column('G:G', 13, percentFormat)          # Spread %
+    worksheet.set_column('H:I', 9, volumeFormat)            # +/-2%
+
+    worksheet.autofilter('A1:I11')
+    worksheet.freeze_panes(1, 0)
+        
+    writer.save()
     
-    
-    ######### TODO: Format Volume to million
-    
-    ######### TODO: Excel is filterable
-    
-    ######### TODO: Autoformat Excel
-    
-    df.to_excel(fileName, index=False)
-                
 if __name__ == "__main__":
     run()

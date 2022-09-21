@@ -47,8 +47,12 @@ def run():
                 
                 quote = value['quote']
                 base = value['base']
+                
+                ######### TODO: Get all base assets, not only USD
+                
+                ######### TODO: Get all markets, not only spot. Show market as new column
                             
-                if not (isActiveMarket(value) and isSpotPair(value) and isUSDpair(quote)):
+                if not (isActiveMarket(value) and isSpotPair(value)):
                     continue
                 
                 if isUSDBasePair(base):
@@ -59,14 +63,19 @@ def run():
                 if not tickerHasPrice(ticker):
                     continue    
                 
-                ######### TODO: Convert nonUSD pairs to USD -> Remove restriction to USD only
-                
                 ask = ticker['ask']
                 bid = ticker['bid']            
                 quoteVolume = ticker['quoteVolume'] 
                 
                 if quoteVolume is None:
-                    continue       
+                    continue                
+                
+                if not isUSDpair(quote):                
+                    # Find USD pair for base -> Convert quote volume to USD
+                    for usdPair, marketValue in markets.items():                
+                        if 'USD' in marketValue['quote'] and quote in marketValue['base']:                 
+                            quoteVolume *= tickers[usdPair]['last']
+                            break
                 
                 if quoteVolume < min24hvolume:
                     continue

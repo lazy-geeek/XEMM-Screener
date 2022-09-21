@@ -20,6 +20,7 @@ def run():
         
     exchanges = config['exchanges']
     min24hvolume = config['min24hvolume']
+    orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
     #exchanges =  ["gate","kucoin"]
@@ -58,7 +59,7 @@ def run():
                 if not tickerHasPrice(ticker):
                     continue    
                 
-                ######### TODO: Convert nonUSD pairs to USD
+                ######### TODO: Convert nonUSD pairs to USD -> Remove restriction to USD only
                 
                 ask = ticker['ask']
                 bid = ticker['bid']            
@@ -68,7 +69,9 @@ def run():
                     continue       
                 
                 if quoteVolume < min24hvolume:
-                    continue      
+                    continue
+                
+                ######### TODO: Number of trades in the last hour
                 
                 if base not in baseCoins:
                     baseCoins.append(base)      
@@ -83,8 +86,8 @@ def run():
                     askVolume = 0
                     bidVolume = 0                
                 else:
-                    askVolume = orderBookVolume('asks',orderbook)
-                    bidVolume = orderBookVolume('bids',orderbook)
+                    askVolume = orderBookVolume('asks',orderbook,orderBookDepth)
+                    bidVolume = orderBookVolume('bids',orderbook,orderBookDepth)
                 
                 # Create row
             
@@ -103,6 +106,12 @@ def run():
         except ccxt.ExchangeError as e:
             pprint(str(e))
             
+    ######### TODO: Base coin must be traded at at least 2 exchanges
+    
+    ######### TODO: Keep only rows with highest and lowest spread
+    
+    ######### TODO: Spread Factor between highest and lowest spread
+                
     df = pd.DataFrame.from_records(rows)
     
     # Remove Base pairs which are only traded on 1 exchange
@@ -112,10 +121,6 @@ def run():
         if len(indexBase) == 1:
             df.drop(indexBase, inplace=True)  # type: ignore
         
-    ######### TODO: Keep only exchanges with highest and lowest spread
-    
-    ######### TODO: Spread Factor between highest and lowest spread
-    
     df.sort_values(['ticker'], inplace=True, ascending=True)
     
     df.rename(columns={ 'exchange': 'Exchange',
@@ -125,8 +130,8 @@ def run():
                         'base': 'Base',
                         'quote': 'Quote',
                         'spread': 'Spread %',
-                        'askVolume': '+2%',
-                        'bidVolume': '-2%'
+                        'askVolume': '+' + str(orderBookDepth) + '%',
+                        'bidVolume': '-' + str(orderBookDepth) + '%'
                             }, inplace=True)
         
     sheetName = 'Order Books'
@@ -150,7 +155,7 @@ def run():
     worksheet.set_column('D:D', 9, volumeFormat)            # 24h Volume
     worksheet.set_column('E:F', 10, volumeFormat)           # Base / Quote
     worksheet.set_column('G:G', 13, percentFormat)          # Spread %
-    worksheet.set_column('H:I', 9, volumeFormat)            # +/-2%
+    worksheet.set_column('H:I', 9, volumeFormat)            # Orderbook Depth
 
     worksheet.autofilter('A1:I11')
     worksheet.freeze_panes(1, 0)

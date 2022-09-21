@@ -20,14 +20,14 @@ def isUSDpair(quote):
 def isUSDBasePair(base):
     return 'USD' in base
 
-def orderBookVolume(side, orderBook):
+def orderBookVolume(side, orderBook, orderBookDepth):
     
     price = 0
     totalVolume = 0
     orderBookLevel = 0
     
     # Calculate volume border price
-    borderPrice = orderBook[side][0][0] * (1 + (2 / 100))
+    borderPrice = orderBook[side][0][0] * (1 + (orderBookDepth / 100))
     
     while price < borderPrice and orderBookLevel < len(orderBook[side]) - 1:
         

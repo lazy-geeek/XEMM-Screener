@@ -1,3 +1,4 @@
+from traceback import print_exc
 import ccxt
 import json
 import pandas as pd
@@ -22,8 +23,8 @@ def run():
     min24hvolume = config['min24hvolume']
     orderBookDepth = config['orderBookDepth']
     
-    #exchanges =  ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
-    exchanges =  ["gate"]
+    #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","hitbtc","mexc","huobi","kucoin","okx"]
+    exchanges =  ["ftx"]
     
     for exchangeName in exchanges:  
         
@@ -33,7 +34,7 @@ def run():
 
             exchange = exchange_class({
                 "enableRateLimit": True,
-                "options": {'defaultType': 'spot' }            
+                "options": {'defaultType': 'spot' }
             })
 
             print("Exchange:", exchange)
@@ -41,23 +42,13 @@ def run():
             markets = exchange.load_markets(True)
             tickers = exchange.fetch_tickers()
             
-            pair = '1INCH/ETH'
-            quoteVolume = 0
-            row = {}
+            
+            for pair, value in markets.items():
+                text = value['symbol'] + ' ' + value['type']
+                print(text)
+            
                 
-            quote = 'ETH'
-            base = '1INCH'
-                
-            ticker = tickers[pair]
-                            
-            if not isUSDpair(quote):                
-                # Find USD pair for base
-                for usdPair, marketValue in markets.items():                
-                    if 'USD' in marketValue['quote'] and quote in marketValue['base']:                 
-                        print(usdPair)
-                        
-                        print(tickers[usdPair]['last'])
-                        break
+            print(len(markets))
                 
         except ccxt.ExchangeError as e:
             pprint(str(e))

@@ -1,5 +1,5 @@
 {
-    "exchanges": ["binance","binanceusdm","bybit","ftx","gate","mexc","kucoin","wavesexchange"],
+    "exchanges": ["binance","binanceusdm","bybit","ftx","gate","mexc","kucoin"],
     "min24hvolume": 1000000,
     "orderBookDepth": 0.4
 }

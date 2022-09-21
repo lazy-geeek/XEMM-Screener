@@ -1,7 +1,4 @@
-def isSpotPair(value):
-    if value['spot'] == True and value['margin'] == False:
-        return True
-    
+def isValidPair(value):
     if ':' not in value['symbol']:
         return True    
 

@@ -23,17 +23,19 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
-    #exchanges =  ["gate","kucoin"]
+    #exchanges =  ["mexc"]
     
     for exchangeName in exchanges:  
         
         try:              
 
             exchange_class = getattr(ccxt, exchangeName)
+            
+            ######### TODO: Get spot & swap pairs
 
             exchange = exchange_class({
                 "enableRateLimit": True,
-                "options": {'defaultType': 'spot' }            
+                "options": {'defaultType': 'spot' }           
             })
 
             print("Exchange:", exchange)
@@ -48,15 +50,17 @@ def run():
                 quote = value['quote']
                 base = value['base']
                 
-                ######### TODO: Get all base assets, not only USD
+                type = value['type']
                 
-                ######### TODO: Get all markets, not only spot. Show market as new column
+                ######### TODO: Check swap pairs with :Collateral
                             
-                if not (isActiveMarket(value) and isSpotPair(value)):
+                if not (isActiveMarket(value) and isValidPair(value)):
                     continue
                 
                 if isUSDBasePair(base):
                     continue
+                
+                ######### TODO: Get swap ticker
                 
                 ticker = tickers[pair]
                             
@@ -69,6 +73,8 @@ def run():
                 
                 if quoteVolume is None:
                     continue                
+                
+                ######### TODO: If there is no USD pair for base, then skip (BIDR / TRY)
                 
                 if not isUSDpair(quote):                
                     # Find USD pair for base -> Convert quote volume to USD
@@ -102,6 +108,7 @@ def run():
             
                 row['exchange'] = exchangeName
                 row['ticker'] = ticker['symbol']
+                row['type'] = type
                 row['price'] = ticker['last']
                 row['volume'] = quoteVolume / 1000
                 row['base'] = base
@@ -115,10 +122,6 @@ def run():
         except ccxt.ExchangeError as e:
             pprint(str(e))
             
-    ######### TODO: Base coin must be traded at at least 2 exchanges
-    
-    ######### TODO: Keep only rows with highest and lowest spread
-    
     ######### TODO: Spread Factor between highest and lowest spread
                 
     df = pd.DataFrame.from_records(rows)
@@ -134,6 +137,7 @@ def run():
     
     df.rename(columns={ 'exchange': 'Exchange',
                         'ticker': 'Ticker',
+                        'type' : 'Type',
                         'price': 'Price',
                         'volume': '24h',
                         'base': 'Base',
@@ -160,11 +164,11 @@ def run():
     # Set the column width and format.
     worksheet.set_column('A:A', 13)                         # Exchange
     worksheet.set_column('B:B', 14)                         # Ticker
-    worksheet.set_column('C:C', 9, priceFormat)             # Price
-    worksheet.set_column('D:D', 9, volumeFormat)            # 24h Volume
-    worksheet.set_column('E:F', 10, volumeFormat)           # Base / Quote
-    worksheet.set_column('G:G', 13, percentFormat)          # Spread %
-    worksheet.set_column('H:I', 9, volumeFormat)            # Orderbook Depth
+    worksheet.set_column('D:D', 9, priceFormat)             # Price
+    worksheet.set_column('E:E', 9, volumeFormat)            # 24h Volume
+    worksheet.set_column('F:G', 10, volumeFormat)           # Base / Quote
+    worksheet.set_column('H:H', 13, percentFormat)          # Spread %
+    worksheet.set_column('I:J', 9, volumeFormat)            # Orderbook Depth
 
     worksheet.autofilter('A1:I11')
     worksheet.freeze_panes(1, 0)

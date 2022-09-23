@@ -5,7 +5,6 @@ def isValidPair(value):
 def isActiveMarket(value):
     return value['active'] is True
 
-
 def tickerHasPrice(ticker):
     if ticker['ask'] is None or ticker['bid'] is None:
         return False

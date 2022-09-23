@@ -6,6 +6,8 @@ import time
 from functions import *
 from pprint import pprint
 
+supportedExchanges = ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
+
 def run():
     
     print("XEMM Screener")
@@ -18,31 +20,66 @@ def run():
     baseCoins = []
     min24hvolume = 0        
         
-    exchanges = config['exchanges']
+    screenedExchanges = config['screenedExchanges']
     min24hvolume = config['min24hvolume']
     orderBookDepth = config['orderBookDepth']
     
-    #exchanges =  ["binance","bybit","ftx","gate","hitbtc","huobi","kucoin","okx"]
+    #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
     #exchanges =  ["mexc"]
     
-    for exchangeName in exchanges:  
+    for exchangeName in screenedExchanges:
+        
+        if not exchangeName in supportedExchanges:
+            continue
+        
+        print("Exchange:", exchangeName)
+        
+        markets = {}    
+        tickers = {}
+        spotMarkets = {}
+        spotTickers = {}
+        futureMarkets = {}
+        futureTickers = {}
         
         try:              
 
             exchange_class = getattr(ccxt, exchangeName)
             
             ######### TODO: Get spot & swap pairs
-
-            exchange = exchange_class({
-                "enableRateLimit": True,
-                "options": {'defaultType': 'spot' }           
-            })
-
-            print("Exchange:", exchange)
-
-            markets = exchange.load_markets(True)
-            tickers = exchange.fetch_tickers()
             
+            if exchangeName in ["binance","bybit","ftx","gate","mexc3","kucoin"]:
+                
+                # Spot markets
+                
+                exchange = exchange_class({
+                    "enableRateLimit": True,
+                    "options": {'defaultType': 'spot' }           
+                })
+
+                spotMarkets = exchange.load_markets(True)
+                spotTickers = exchange.fetch_tickers()
+            
+            if exchangeName in ["binanceusdm","bybit","gate","kucoinfutures"]:
+                
+                # Future markets
+                
+                exchange = exchange_class({
+                    "enableRateLimit": True,
+                    "options": {'defaultType': 'future' }           
+                })
+
+                futureMarkets = exchange.load_markets(True)
+                futureTickers = exchange.fetch_tickers()
+                
+            markets.update(spotMarkets)
+            markets.update(futureMarkets)
+            tickers.update(spotTickers)
+            tickers.update(futureTickers)
+            
+            print('Number of markets: ', len(markets))
+            print('Number of tickers: ', len(tickers))
+            
+            """
             for pair, value in markets.items():
                 quoteVolume = 0
                 row = {}
@@ -118,10 +155,11 @@ def run():
                 row['bidVolume'] = bidVolume
                 
                 rows.append(row)                
-                
+        """        
         except ccxt.ExchangeError as e:
             pprint(str(e))
-            
+           
+    """
     ######### TODO: Spread Factor between highest and lowest spread
                 
     df = pd.DataFrame.from_records(rows)
@@ -174,6 +212,7 @@ def run():
     worksheet.freeze_panes(1, 0)
         
     writer.save()
+    """
     
 if __name__ == "__main__":
     run()

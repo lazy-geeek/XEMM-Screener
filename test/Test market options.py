@@ -3,6 +3,11 @@ import ccxt
 import json
 import pandas as pd
 import time
+import os
+import sys
+
+# Append parent directory to import path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from functions import *
 from pprint import pprint
@@ -24,7 +29,7 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","hitbtc","mexc","huobi","kucoin","okx"]
-    exchanges =  ["ftx"]
+    exchanges =  ["mexc3"]
     
     for exchangeName in exchanges:  
         
@@ -34,7 +39,8 @@ def run():
 
             exchange = exchange_class({
                 "enableRateLimit": True,
-                "options": {'defaultType': 'spot' }
+                "options": {'defaultType': 'future' }           
+                
             })
 
             print("Exchange:", exchange)

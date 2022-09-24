@@ -1,17 +1,24 @@
-def isValidPair(value):
+def isValidPair(exchangeName, value):
+    if exchangeName in ['binance']:
+        if value['type'] == 'spot':
+            return True
     
-    #TODO: Check Type -> Dependend on exchange -> exchangeName needed as parameter
+    if exchangeName in ['binanceusdm']:
+        if value['type'] == 'future':
+            return True
     
-    if ':' not in value['symbol']:
-        return True    
-
+    #TODO: Check Type -> Dependend on exchange
+    
 def isActiveMarket(value):
     return value['active'] is True
 
-def tickerHasPrice(ticker):
-    if ticker['ask'] is None or ticker['bid'] is None:
-        return False
-    return float(ticker['ask']) > 0 and float(ticker['bid']) > 0
+def tickerHasPrice(type, ticker):
+    if type == 'spot':
+        if ticker['ask'] is None or ticker['bid'] is None:
+            return False
+        return float(ticker['ask']) > 0 and float(ticker['bid']) > 0
+    else:
+        return True
 
 def isUSDpair(quote):
     return 'USD' in quote

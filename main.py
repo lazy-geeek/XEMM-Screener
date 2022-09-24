@@ -25,7 +25,7 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    #exchanges =  ["mexc"]
+    screenedExchanges =  ["binanceusdm"]
     
     for exchangeName in screenedExchanges:
         
@@ -77,32 +77,30 @@ def run():
             #print('Number of markets: ', len(markets))
             #print('Number of tickers: ', len(tickers))
                         
-            for pair, value in markets.items():
+            for key, value in markets.items():
                 quoteVolume = 0
                 row = {}
                 
+                pair = value['symbol']
                 quote = value['quote']
                 base = value['base']
                 
-                type = value['type']
-                
-                ######### TODO: Check swap pairs with :Collateral
+                type = value['type']                
                             
-                if not (isActiveMarket(value) and isValidPair(value)):
+                if not (isActiveMarket(value) and isValidPair(exchangeName, value)):
                     continue
                 
                 if isUSDBasePair(base):
                     continue
                 
-                ######### TODO: Get swap ticker
+                if not pair in tickers.keys():
+                    continue                
                 
-                ticker = tickers[pair]
+                ticker = tickers[pair]                
                             
-                if not tickerHasPrice(ticker):
-                    continue    
+                if not tickerHasPrice(type, ticker):
+                    continue 
                 
-                ask = ticker['ask']
-                bid = ticker['bid']            
                 quoteVolume = ticker['quoteVolume'] 
                 
                 if quoteVolume is None:
@@ -124,12 +122,17 @@ def run():
                 
                 if base not in baseCoins:
                     baseCoins.append(base)      
-                
-                spread = (ask / bid - 1) * 100
-                
-                # Calculate Orderbook Volume            
-                
+                    
                 orderbook = exchange.fetch_order_book(pair) # type: ignore
+                
+                ######### TODO: Calc spread from orderbook, not ticker
+                
+                ask = ticker['ask']
+                bid = ticker['bid']
+                
+                spread = (ask / bid - 1) * 100   
+                
+                # Calculate Orderbook Volume  
                 
                 if not (orderbook['asks'] or orderbook['bids']):
                     askVolume = 0
@@ -155,9 +158,10 @@ def run():
         
         except ccxt.ExchangeError as e:
             pprint(str(e))
-           
     
     ######### TODO: Spread Factor between highest and lowest spread
+     
+    print(len(rows))
                 
     df = pd.DataFrame.from_records(rows)
     
@@ -208,8 +212,7 @@ def run():
     worksheet.autofilter('A1:I11')
     worksheet.freeze_panes(1, 0)
         
-    writer.save()
-    
+    writer.save()    
     
 if __name__ == "__main__":
     run()

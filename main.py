@@ -44,9 +44,7 @@ def run():
         try:              
 
             exchange_class = getattr(ccxt, exchangeName)
-            
-            ######### TODO: Get spot & swap pairs
-            
+                        
             if exchangeName in ["binance","bybit","ftx","gate","mexc3","kucoin"]:
                 
                 # Spot markets
@@ -76,10 +74,9 @@ def run():
             tickers.update(spotTickers)
             tickers.update(futureTickers)
             
-            print('Number of markets: ', len(markets))
-            print('Number of tickers: ', len(tickers))
-            
-            """
+            #print('Number of markets: ', len(markets))
+            #print('Number of tickers: ', len(tickers))
+                        
             for pair, value in markets.items():
                 quoteVolume = 0
                 row = {}
@@ -132,7 +129,7 @@ def run():
                 
                 # Calculate Orderbook Volume            
                 
-                orderbook = exchange.fetch_order_book(pair)
+                orderbook = exchange.fetch_order_book(pair) # type: ignore
                 
                 if not (orderbook['asks'] or orderbook['bids']):
                     askVolume = 0
@@ -155,11 +152,11 @@ def run():
                 row['bidVolume'] = bidVolume
                 
                 rows.append(row)                
-        """        
+        
         except ccxt.ExchangeError as e:
             pprint(str(e))
            
-    """
+    
     ######### TODO: Spread Factor between highest and lowest spread
                 
     df = pd.DataFrame.from_records(rows)
@@ -212,7 +209,7 @@ def run():
     worksheet.freeze_panes(1, 0)
         
     writer.save()
-    """
+    
     
 if __name__ == "__main__":
     run()

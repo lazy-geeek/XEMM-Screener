@@ -1,4 +1,7 @@
 def isValidPair(value):
+    
+    #TODO: Check Type -> Dependend on exchange -> exchangeName needed as parameter
+    
     if ':' not in value['symbol']:
         return True    
 

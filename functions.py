@@ -6,6 +6,10 @@ def isValidPair(exchangeName, value):
     if exchangeName in ['binanceusdm']:
         if value['type'] == 'future':
             return True
+        
+    if exchangeName in ['bybit']:
+        if value['type'] == 'spot' or value['type'] == 'swap':
+            return True
     
     #TODO: Check Type -> Dependend on exchange
     
@@ -25,6 +29,12 @@ def isUSDpair(quote):
 
 def isUSDBasePair(base):
     return 'USD' in base
+
+def isSpotPair(type):
+    return type == 'spot'
+
+def orderBookPrice(side, orderBook):
+    return orderBook[side][0][0]
 
 def orderBookVolume(side, orderBook, orderBookDepth):
     

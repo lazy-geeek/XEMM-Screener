@@ -25,7 +25,7 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    screenedExchanges =  ["binanceusdm"]
+    screenedExchanges =  ["bybit"]
     
     for exchangeName in screenedExchanges:
         
@@ -49,33 +49,33 @@ def run():
                 
                 # Spot markets
                 
-                exchange = exchange_class({
+                spotExchange = exchange_class({
                     "enableRateLimit": True,
                     "options": {'defaultType': 'spot' }           
                 })
 
-                spotMarkets = exchange.load_markets(True)
-                spotTickers = exchange.fetch_tickers()
+                spotMarkets = spotExchange.load_markets(True)
+                spotTickers = spotExchange.fetch_tickers()
             
             if exchangeName in ["binanceusdm","bybit","gate","kucoinfutures"]:
                 
                 # Future markets
                 
-                exchange = exchange_class({
+                futureExchange = exchange_class({
                     "enableRateLimit": True,
                     "options": {'defaultType': 'future' }           
                 })
 
-                futureMarkets = exchange.load_markets(True)
-                futureTickers = exchange.fetch_tickers()
+                futureMarkets = futureExchange.load_markets(True)
+                futureTickers = futureExchange.fetch_tickers()
                 
             markets.update(spotMarkets)
             markets.update(futureMarkets)
             tickers.update(spotTickers)
             tickers.update(futureTickers)
             
-            #print('Number of markets: ', len(markets))
-            #print('Number of tickers: ', len(tickers))
+            print('Number of markets: ', len(markets))
+            print('Number of tickers: ', len(tickers))
                         
             for key, value in markets.items():
                 quoteVolume = 0
@@ -106,32 +106,40 @@ def run():
                 if quoteVolume is None:
                     continue                
                 
-                ######### TODO: If there is no USD pair for base, then skip (BIDR / TRY)
-                
-                if not isUSDpair(quote):                
+                if not isUSDpair(quote):
+                    pairFound = False                
                     # Find USD pair for base -> Convert quote volume to USD
                     for usdPair, marketValue in markets.items():                
                         if 'USD' in marketValue['quote'] and quote in marketValue['base']:                 
                             quoteVolume *= tickers[usdPair]['last']
+                            pairFound = True
                             break
+                    if not pairFound:
+                        continue
+                            
                 
                 if quoteVolume < min24hvolume:
                     continue
                 
-                ######### TODO: Number of trades in the last hour
+                ######### TODO: Number of trades in the last hour                
+                    
+                if isSpotPair(type):
+                    orderbook = spotExchange.fetch_order_book(pair) # type: ignore
+                else:
+                    orderbook = futureExchange.fetch_order_book(pair) # type: ignore
+
+                
+                ask = orderBookPrice('asks', orderbook)
+                bid = orderBookPrice('bids', orderbook)
+                
+                if (ask == 0 or ask == None or bid == 0 or bid == None):                
+                    continue
+                
+                spread = (ask / bid - 1) * 100
                 
                 if base not in baseCoins:
                     baseCoins.append(base)      
-                    
-                orderbook = exchange.fetch_order_book(pair) # type: ignore
-                
-                ######### TODO: Calc spread from orderbook, not ticker
-                
-                ask = ticker['ask']
-                bid = ticker['bid']
-                
-                spread = (ask / bid - 1) * 100   
-                
+                                
                 # Calculate Orderbook Volume  
                 
                 if not (orderbook['asks'] or orderbook['bids']):
@@ -147,7 +155,7 @@ def run():
                 row['ticker'] = ticker['symbol']
                 row['type'] = type
                 row['price'] = ticker['last']
-                row['volume'] = quoteVolume / 1000
+                row['volume'] = quoteVolume / 1000000
                 row['base'] = base
                 row['quote'] = quote
                 row['spread'] = spread
@@ -167,10 +175,13 @@ def run():
     
     # Remove Base pairs which are only traded on 1 exchange
 
+    """
     for base in baseCoins:
         indexBase = df[ (df['base'] == base) ].index
         if len(indexBase) == 1:
             df.drop(indexBase, inplace=True)  # type: ignore
+    """
+    
         
     df.sort_values(['ticker'], inplace=True, ascending=True)
     
@@ -178,7 +189,7 @@ def run():
                         'ticker': 'Ticker',
                         'type' : 'Type',
                         'price': 'Price',
-                        'volume': '24h',
+                        'volume': '24h M',
                         'base': 'Base',
                         'quote': 'Quote',
                         'spread': 'Spread %',
@@ -212,7 +223,7 @@ def run():
     worksheet.autofilter('A1:I11')
     worksheet.freeze_panes(1, 0)
         
-    writer.save()    
+    workbook.close()    
     
 if __name__ == "__main__":
     run()

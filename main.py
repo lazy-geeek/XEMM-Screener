@@ -25,7 +25,9 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    screenedExchanges =  ["bybit"]
+    screenedExchanges =  ["gate"]
+    
+    # TODO: Gate swap pairs are missing in Excel
     
     for exchangeName in screenedExchanges:
         
@@ -57,7 +59,7 @@ def run():
                 spotMarkets = spotExchange.load_markets(True)
                 spotTickers = spotExchange.fetch_tickers()
             
-            if exchangeName in ["binanceusdm","bybit","gate","kucoinfutures"]:
+            if exchangeName in ["binanceusdm","bybit","ftx","gate","kucoinfutures"]:
                 
                 # Future markets
                 
@@ -110,7 +112,7 @@ def run():
                     pairFound = False                
                     # Find USD pair for base -> Convert quote volume to USD
                     for usdPair, marketValue in markets.items():                
-                        if 'USD' in marketValue['quote'] and quote in marketValue['base']:                 
+                        if 'USD' in marketValue['quote'] and quote in marketValue['base'] and usdPair in tickers.keys():                 
                             quoteVolume *= tickers[usdPair]['last']
                             pairFound = True
                             break
@@ -168,9 +170,7 @@ def run():
             pprint(str(e))
     
     ######### TODO: Spread Factor between highest and lowest spread
-     
-    print(len(rows))
-                
+                    
     df = pd.DataFrame.from_records(rows)
     
     # Remove Base pairs which are only traded on 1 exchange

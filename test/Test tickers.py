@@ -55,25 +55,25 @@ def run():
                 
                 # Spot markets
                 
-                exchange = exchange_class({
+                spotExchange = exchange_class({
                     "enableRateLimit": True,
                     "options": {'defaultType': 'spot' }           
                 })
 
-                spotMarkets = exchange.load_markets(True)
-                spotTickers = exchange.fetch_tickers()
+                spotMarkets = spotExchange.load_markets(True)
+                spotTickers = spotExchange.fetch_tickers()
             
             if exchangeName in ["binanceusdm","bybit","gate","kucoinfutures"]:
                 
                 # Future markets
                 
-                exchange = exchange_class({
+                futureExchange = exchange_class({
                     "enableRateLimit": True,
-                    "options": {'defaultType': 'future' }           
+                    "options": {'defaultType': 'swap' }           
                 })
 
-                futureMarkets = exchange.load_markets(True)
-                futureTickers = exchange.fetch_tickers()
+                futureMarkets = futureExchange.load_markets(True)
+                futureTickers = futureExchange.fetch_tickers()
                 
             markets.update(spotMarkets)
             markets.update(futureMarkets)
@@ -82,8 +82,11 @@ def run():
   
             
             
-            for key, value in markets.items():
-                print(value['symbol'], value['type'])
+            #for key, value in markets.items():
+            #    print(value['symbol'], value['type'])
+                
+            for key, value in futureTickers.items():
+                print(key)
             
             """
             

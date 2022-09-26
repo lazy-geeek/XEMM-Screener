@@ -63,10 +63,16 @@ def run():
                 
                 # Future markets
                 
-                futureExchange = exchange_class({
-                    "enableRateLimit": True,
-                    "options": {'defaultType': 'future' }           
-                })
+                if exchangeName in ["gate"]:
+                    futureExchange = exchange_class({
+                        "enableRateLimit": True,
+                        "options": {'defaultType': 'swap' }           
+                    })
+                else:                
+                    futureExchange = exchange_class({
+                        "enableRateLimit": True,
+                        "options": {'defaultType': 'future' }           
+                    })
 
                 futureMarkets = futureExchange.load_markets(True)
                 futureTickers = futureExchange.fetch_tickers()
@@ -174,7 +180,7 @@ def run():
     df = pd.DataFrame.from_records(rows)
     
     # Remove Base pairs which are only traded on 1 exchange
-
+    # TODO Reactivate Code only 1 exchange
     """
     for base in baseCoins:
         indexBase = df[ (df['base'] == base) ].index

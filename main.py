@@ -25,9 +25,7 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    screenedExchanges =  ["gate"]
-    
-    # TODO: Gate swap pairs are missing in Excel
+    screenedExchanges =  ["mexc3"]    
     
     for exchangeName in screenedExchanges:
         
@@ -59,11 +57,11 @@ def run():
                 spotMarkets = spotExchange.load_markets(True)
                 spotTickers = spotExchange.fetch_tickers()
             
-            if exchangeName in ["binanceusdm","bybit","ftx","gate","kucoinfutures"]:
+            if exchangeName in ["binanceusdm","bybit","ftx","gate","kucoinfutures","mexc3"]:
                 
                 # Future markets
                 
-                if exchangeName in ["gate"]:
+                if exchangeName in ["gate","mexc3"]:
                     futureExchange = exchange_class({
                         "enableRateLimit": True,
                         "options": {'defaultType': 'swap' }           
@@ -147,6 +145,8 @@ def run():
                 
                 if base not in baseCoins:
                     baseCoins.append(base)      
+                            
+                ######### TODO: Orderbook volume of swap pairs is too high
                                 
                 # Calculate Orderbook Volume  
                 

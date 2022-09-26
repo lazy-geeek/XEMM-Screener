@@ -7,7 +7,7 @@ def isValidPair(exchangeName, value):
         if value['type'] == 'future':
             return True
         
-    if exchangeName in ['bybit','ftx','gate']:
+    if exchangeName in ['bybit','ftx','gate','mexc3']:
         if value['type'] == 'spot' or value['type'] == 'swap':
             return True
     

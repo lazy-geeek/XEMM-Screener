@@ -24,8 +24,8 @@ def run():
     min24hvolume = config['min24hvolume']
     orderBookDepth = config['orderBookDepth']
     
-    #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    screenedExchanges =  ["mexc3"]    
+    #screenedExchanges =  ["ftx","mexc3","kucoin"]
+    #screenedExchanges =  ["mexc3"]    
     
     for exchangeName in screenedExchanges:
         
@@ -57,7 +57,7 @@ def run():
                 spotMarkets = spotExchange.load_markets(True)
                 spotTickers = spotExchange.fetch_tickers()
             
-            if exchangeName in ["binanceusdm","bybit","ftx","gate","kucoinfutures","mexc3"]:
+            if exchangeName in ["binanceusdm","bybit","ftx","gate","mexc3"]:
                 
                 # Future markets
                 
@@ -73,7 +73,14 @@ def run():
                     })
 
                 futureMarkets = futureExchange.load_markets(True)
-                futureTickers = futureExchange.fetch_tickers()
+                
+                if futureExchange.has['fetchTickers'] == True:
+                    futureTickers = futureExchange.fetch_tickers()
+                else:  
+                    print('Fetch Tickers not supported')
+                    for key, value in futureMarkets.items():
+                        futureTicker = futureExchange.fetch_ticker(value['symbol'])
+                        futureTickers.update(futureTicker)
                 
             markets.update(spotMarkets)
             markets.update(futureMarkets)
@@ -169,27 +176,32 @@ def run():
                 row['spread'] = spread
                 row['askVolume'] = askVolume
                 row['bidVolume'] = bidVolume
+                row['spreadMultiplier'] = 0
                 
                 rows.append(row)                
         
         except ccxt.ExchangeError as e:
             pprint(str(e))
     
-    ######### TODO: Spread Factor between highest and lowest spread
-                    
     df = pd.DataFrame.from_records(rows)
     
-    # Remove Base pairs which are only traded on 1 exchange
-    # TODO Reactivate Code only 1 exchange
-    """
     for base in baseCoins:
         indexBase = df[ (df['base'] == base) ].index
+        
+        # Remove Base pairs which are only traded on 1 exchange
+        
         if len(indexBase) == 1:
             df.drop(indexBase, inplace=True)  # type: ignore
-    """
-    
-        
-    df.sort_values(['ticker'], inplace=True, ascending=True)
+        else:
+            
+            # Calcaulate spread multiplier
+            
+            maxSpread = df.loc[indexBase, 'spread'].max()
+            minSpread = df.loc[indexBase, 'spread'].min()
+            spreadMultiplier = maxSpread / minSpread
+            df.loc[df.base == base, 'spreadMultiplier'] = spreadMultiplier        
+            
+    df.sort_values(['spreadMultiplier', 'spread'], ascending=[False, True], inplace=True)
     
     df.rename(columns={ 'exchange': 'Exchange',
                         'ticker': 'Ticker',
@@ -200,7 +212,8 @@ def run():
                         'quote': 'Quote',
                         'spread': 'Spread %',
                         'askVolume': '+' + str(orderBookDepth) + '%',
-                        'bidVolume': '-' + str(orderBookDepth) + '%'
+                        'bidVolume': '-' + str(orderBookDepth) + '%',
+                        'spreadMultiplier': 'Spread multiplier'
                             }, inplace=True)
         
     sheetName = 'Order Books'
@@ -219,14 +232,16 @@ def run():
 
     # Set the column width and format.
     worksheet.set_column('A:A', 13)                         # Exchange
-    worksheet.set_column('B:B', 14)                         # Ticker
+    worksheet.set_column('B:B', 18)                         # Ticker
+    worksheet.set_column('C:C', 9)                          # Type
     worksheet.set_column('D:D', 9, priceFormat)             # Price
-    worksheet.set_column('E:E', 9, volumeFormat)            # 24h Volume
+    worksheet.set_column('E:E', 10, volumeFormat)           # 24h Volume
     worksheet.set_column('F:G', 10, volumeFormat)           # Base / Quote
     worksheet.set_column('H:H', 13, percentFormat)          # Spread %
-    worksheet.set_column('I:J', 9, volumeFormat)            # Orderbook Depth
+    worksheet.set_column('I:J', 18, volumeFormat)           # Orderbook Depth
+    worksheet.set_column('I:K', 18, priceFormat)            # Spread multiplier
 
-    worksheet.autofilter('A1:I11')
+    worksheet.autofilter('A1:K1')
     worksheet.freeze_panes(1, 0)
         
     workbook.close()    

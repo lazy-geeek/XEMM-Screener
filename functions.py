@@ -1,5 +1,5 @@
 def isValidPair(exchangeName, value):
-    if exchangeName in ['binance']:
+    if exchangeName in ['binance','kucoin']:
         if value['type'] == 'spot':
             return True
     
@@ -9,9 +9,7 @@ def isValidPair(exchangeName, value):
         
     if exchangeName in ['bybit','ftx','gate','mexc3']:
         if value['type'] == 'spot' or value['type'] == 'swap':
-            return True
-    
-    #TODO: Check Type -> Dependend on exchange
+            return True    
     
 def isActiveMarket(value):
     return value['active'] is True

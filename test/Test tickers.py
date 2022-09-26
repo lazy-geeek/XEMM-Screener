@@ -30,7 +30,7 @@ def run():
     orderBookDepth = config['orderBookDepth']
     
     #exchanges =  ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
-    screenedExchanges =  ["gate"]
+    screenedExchanges =  ["ftx"]
     
     for exchangeName in screenedExchanges:
         
@@ -63,7 +63,7 @@ def run():
                 spotMarkets = spotExchange.load_markets(True)
                 spotTickers = spotExchange.fetch_tickers()
             
-            if exchangeName in ["binanceusdm","bybit","gate","kucoinfutures"]:
+            if exchangeName in ["binanceusdm","bybit","gate","mexc3","ftx"]:
                 
                 # Future markets
                 
@@ -85,17 +85,18 @@ def run():
             #for key, value in markets.items():
             #    print(value['symbol'], value['type'])
                 
-            for key, value in futureTickers.items():
-                print(key)
+            #for key, value in futureTickers.items():
+            #    print(key)
+            
+            
+            
+            #pprint(tickers['BTC/USDT'])
+            orderbook = futureExchange.fetch_order_book('BTC/USDT:USDT')
+            pprint(orderbook['asks'][0])
+            #pprint(markets['BTC/USDT:USDT'])
+            
             
             """
-            
-            pprint(tickers['BTC/USDT'])
-            orderbook = exchange.fetch_order_book('BTC/USDT:USDT')
-            pprint(orderbook)
-            
-            
-  
             
             
            

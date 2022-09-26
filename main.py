@@ -239,7 +239,7 @@ def run():
     worksheet.set_column('F:G', 10, volumeFormat)           # Base / Quote
     worksheet.set_column('H:H', 13, percentFormat)          # Spread %
     worksheet.set_column('I:J', 18, volumeFormat)           # Orderbook Depth
-    worksheet.set_column('I:K', 18, priceFormat)            # Spread multiplier
+    worksheet.set_column('K:K', 18, priceFormat)            # Spread multiplier
 
     worksheet.autofilter('A1:K1')
     worksheet.freeze_panes(1, 0)

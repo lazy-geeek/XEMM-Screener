@@ -134,3 +134,6 @@ dmypy.json
 
 # Excel files
 *.xlsx
+
+# Visual Studio Code
+.vscode

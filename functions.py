@@ -23,7 +23,7 @@ def tickerHasPrice(type, ticker):
         return True
 
 def isUSDpair(quote):
-    return 'USD' in quote
+    return 'USD' in quote or quote == 'DAI'
 
 def isUSDBasePair(base):
     return 'USD' in base

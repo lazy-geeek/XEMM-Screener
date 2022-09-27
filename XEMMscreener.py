@@ -6,7 +6,7 @@ import time
 from functions import *
 from pprint import pprint
 
-supportedExchanges = ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin","kucoinfutures"]
+supportedExchanges = ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin"]
 
 def run():
     
@@ -18,14 +18,16 @@ def run():
     df = pd.DataFrame()
     rows = []
     baseCoins = []
+    quoteAggrCoins = []
     min24hvolume = 0        
         
     screenedExchanges = config['screenedExchanges']
     min24hvolume = config['min24hvolume']
     orderBookDepth = config['orderBookDepth']
     
-    #screenedExchanges =  ["ftx","mexc3","kucoin"]
-    #screenedExchanges =  ["mexc3"]    
+    #screenedExchanges =  ["binance","gate","kucoin"]
+    #screenedExchanges =  ["mexc3"]
+    #screenedExchanges =  ["gate","kucoin"]
     
     for exchangeName in screenedExchanges:
         
@@ -120,6 +122,7 @@ def run():
                     continue                
                 
                 if not isUSDpair(quote):
+                    quoteAggr = quote
                     pairFound = False                
                     # Find USD pair for base -> Convert quote volume to USD
                     for usdPair, marketValue in markets.items():                
@@ -129,6 +132,8 @@ def run():
                             break
                     if not pairFound:
                         continue
+                else:
+                    quoteAggr = 'USD'
                             
                 
                 if quoteVolume < min24hvolume:
@@ -151,9 +156,12 @@ def run():
                 spread = (ask / bid - 1) * 100
                 
                 if base not in baseCoins:
-                    baseCoins.append(base)      
+                    baseCoins.append(base)
+                    
+                if quoteAggr not in quoteAggrCoins:
+                    quoteAggrCoins.append(quoteAggr)                    
                             
-                ######### TODO: Orderbook volume of swap pairs is too high
+                ######### TODO: Orderbook volume of some exchanges is too high
                                 
                 # Calculate Orderbook Volume  
                 
@@ -172,11 +180,12 @@ def run():
                 row['price'] = ticker['last']
                 row['volume'] = quoteVolume / 1000000
                 row['base'] = base
-                row['quote'] = quote
+                row['quote'] = quote                
                 row['spread'] = spread
                 row['askVolume'] = askVolume
                 row['bidVolume'] = bidVolume
                 row['spreadMultiplier'] = 0
+                row['quoteAggr'] = quoteAggr
                 
                 rows.append(row)                
         
@@ -186,20 +195,29 @@ def run():
     df = pd.DataFrame.from_records(rows)
     
     for base in baseCoins:
-        indexBase = df[ (df['base'] == base) ].index
-        
-        # Remove Base pairs which are only traded on 1 exchange
-        
-        if len(indexBase) == 1:
-            df.drop(indexBase, inplace=True)  # type: ignore
-        else:
+        for quoteAggr in quoteAggrCoins:
             
-            # Calcaulate spread multiplier
+            indexBase = df[ (df['base'] == base) & (df['quoteAggr'] == quoteAggr) ].index
             
-            maxSpread = df.loc[indexBase, 'spread'].max()
-            minSpread = df.loc[indexBase, 'spread'].min()
-            spreadMultiplier = maxSpread / minSpread
-            df.loc[df.base == base, 'spreadMultiplier'] = spreadMultiplier        
+            # Remove Base pairs which are only traded on 1 exchange
+            
+            if len(indexBase) == 1:
+                df.drop(indexBase, inplace=True)  # type: ignore
+                
+            if len(indexBase) > 1:
+                
+                # Calcaulate spread multiplier                
+                
+                maxSpread = df.loc[indexBase, 'spread'].max()
+                minSpread = df.loc[indexBase, 'spread'].min()
+                spreadMultiplier = maxSpread / minSpread
+                df.loc[(df.base == base) & (df.quoteAggr == quoteAggr), 'spreadMultiplier'] = spreadMultiplier        
+            
+    # Remove columns
+    
+    df.drop('quoteAggr', axis=1, inplace=True)
+    
+    # Sort columns
             
     df.sort_values(['spreadMultiplier', 'spread'], ascending=[False, True], inplace=True)
     

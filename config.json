@@ -1,6 +1,7 @@
 {
-    "screenedExchanges": ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin"],
+    "screenedExchanges": ["binance","binanceusdm","bybit","ftx","gate","mexc3","kucoin"],    
     "min24hvolume": 500000,
+    "minSpreadPercent": 0.2,
     "orderBookDepth": 0.4
 }
 

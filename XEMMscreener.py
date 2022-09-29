@@ -23,11 +23,10 @@ def run():
         
     screenedExchanges = config['screenedExchanges']
     min24hvolume = config['min24hvolume']
+    minSpreadPercent = config['minSpreadPercent']    
     orderBookDepth = config['orderBookDepth']
     
-    #screenedExchanges =  ["binance","gate","kucoin"]
-    #screenedExchanges =  ["mexc3"]
-    #screenedExchanges =  ["gate","kucoin"]
+    #screenedExchanges =  ["binance","gate","kucoin"]    
     
     for exchangeName in screenedExchanges:
         
@@ -108,6 +107,8 @@ def run():
                 if isUSDBasePair(base):
                     continue
                 
+                # TODO: Bybit has only 50% of market tickers
+                
                 if not pair in tickers.keys():
                     continue                
                 
@@ -138,14 +139,11 @@ def run():
                 
                 if quoteVolume < min24hvolume:
                     continue
-                
-                ######### TODO: Number of trades in the last hour                
                     
                 if isSpotPair(type):
                     orderbook = spotExchange.fetch_order_book(pair) # type: ignore
                 else:
                     orderbook = futureExchange.fetch_order_book(pair) # type: ignore
-
                 
                 ask = orderBookPrice('asks', orderbook)
                 bid = orderBookPrice('bids', orderbook)
@@ -192,12 +190,17 @@ def run():
         except ccxt.ExchangeError as e:
             pprint(str(e))
     
+    
+    # TODO: Create Excel per exchange and not for all
+    
     df = pd.DataFrame.from_records(rows)
     
     for base in baseCoins:
         for quoteAggr in quoteAggrCoins:
             
             indexBase = df[ (df['base'] == base) & (df['quoteAggr'] == quoteAggr) ].index
+            
+            # TODO: Minimum max. Spread
             
             # Remove Base pairs which are only traded on 1 exchange
             
@@ -211,7 +214,10 @@ def run():
                 maxSpread = df.loc[indexBase, 'spread'].max()
                 minSpread = df.loc[indexBase, 'spread'].min()
                 spreadMultiplier = maxSpread / minSpread
-                df.loc[(df.base == base) & (df.quoteAggr == quoteAggr), 'spreadMultiplier'] = spreadMultiplier        
+                if maxSpread >= minSpreadPercent:
+                    df.loc[(df.base == base) & (df.quoteAggr == quoteAggr), 'spreadMultiplier'] = spreadMultiplier
+                else:
+                    df.drop(indexBase, inplace=True)  # type: ignore
             
     # Remove columns
     
